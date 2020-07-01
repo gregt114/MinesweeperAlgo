@@ -134,5 +134,8 @@ def get_proba(board):
 
 
 
-def proba_helper(arr):
-    pass
+def get_coords(area, r ,c):
+    """
+    Returns the coordinates of a tile given its (row,col) index
+    """
+    return (area[0] + 17*r + 8.5, area[1] + 17*c + 8.5, 0.5) 

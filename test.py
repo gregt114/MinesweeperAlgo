@@ -36,9 +36,8 @@ print(proba)
 
 for i in range(len(proba)):
     for j in range(len(proba[0])):
-        if proba[i][j] > 0:
-            pg.moveTo(window[0] + 17*j + 8, window[1] + 17*i + 8, 0.5)
-            pg.click(button="right", clicks=2)
+        pg.moveTo(get_coords(window,j,i)[0], get_coords(window,j,i)[1])
+        pg.click(button="right", clicks=2)
 
 
 
