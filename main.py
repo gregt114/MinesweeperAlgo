@@ -18,6 +18,7 @@ def test_click():
     pg.click(coords)
 
 
+
 def get_board(area):
 
     # Get locations for each type of tile
@@ -29,8 +30,8 @@ def get_board(area):
 
     board_data = []
     # Add labels to each type of tile (Box objects)
-    # -1 is a hidden tile, 0 is clear, 1 is one, etc...
-    for lst,name in zip([hiddens, clears, ones, twos, threes], [-1,0,1,2,3]):
+    # -1 is a clear tile, 0 is a hidden tile, 1 is one, etc...
+    for lst,name in zip([clears, hiddens, ones, twos, threes], [-1,0,1,2,3]):
         for tile in lst:
             board_data.append([pg.center(tile), name])
 
@@ -48,8 +49,6 @@ def get_board(area):
     return final
     
 
-    
-
 
 def find_window():
     """
@@ -62,14 +61,56 @@ def find_window():
 
 
 
-time.sleep(3)
+def get_neigh(board,x,y):
 
-window = find_window()
+    ylen, xlen = board.shape
 
-test_click()
+    # We first need to find the corrext shape for the array
+    # Corners
+    if (x == 0 and y == 0) or (x == 0 and y == ylen-1) or (x == xlen-1 and y == 0) or (x == xlen-1 and y == ylen-1):
+        dim = (2,2)
+    
+    # Top/Bottom edges have 2x3 neighbor arrays
+    elif (y == 0 or y == ylen-1):
+        dim = (2,3)
 
-time.sleep(0.5)
+    # Left/Right edges have 3x2 neighbor arrays
+    elif (x == 0 or x == xlen-1):
+        dim = (3,2)
+
+    # Everything thats not an edge or corner is regular 3x3 neighbor array
+    else:
+        dim = (3,3)
+
+    # Now we calculate the "distance" between (x,y) and every other point on "board"
+    grid = np.mgrid[0:ylen, 0:xlen]
+
+    ygrid = grid[0]
+    xgrid = grid[1]
+
+    ydist = (ygrid - y)**2
+    xdist = (xgrid - x)**2
+
+    dist = np.sqrt(ydist + xdist)
+
+    # If the distance is less than/equal to sqrt(2) (1.42 slightly > sqrt(2)), then it is a neighbor
+    index = (dist < 1.42)
+
+    # Boolean array indexing returns 1D array, so we need to reshape
+    return board[index].reshape(dim)
 
 
 
-print(get_board(window))
+def get_proba(board):
+    probas = np.zeros_like(board)
+    
+    # For each hidden tile, calulate probability
+    for r in range(len(board)):
+        for c in range(len(board[0])):
+            if board[r][c] == -1:
+                ns = get_neighbors(board,r,c)      # Get neighbors
+                # p = calculate_probability(ns)
+
+
+def calculate_probability(arr):
+    pass
