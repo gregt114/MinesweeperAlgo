@@ -14,33 +14,31 @@ time.sleep(3)
 
 window = find_window()
 
-test_click()
+
+
+
+
+test_click(window)
 
 time.sleep(2)
 
 board = get_board(window)
-
 print(board)
-
 print()
 
-probas = get_proba(board)
-print(probas)
 
-print()
+proba = get_proba(board)
+print(proba)
 
-print(window[0], window[1])
-
-for i in range(len(probas)):
-    for j in range(len(probas[0])):
-        if probas[i][j] > 1:
-            pg.moveTo(window[0] + 17*j, window[1] + 17*i,1)
+# hiddens = list(pg.locateAllOnScreen("images/hidden.png", region=window, confidence=0.95))
+# print(hiddens[0])
 
 
-
-
-
-
+for i in range(len(proba)):
+    for j in range(len(proba[0])):
+        if proba[i][j] > 0:
+            pg.moveTo(window[0] + 17*j + 8, window[1] + 17*i + 8, 0.5)
+            pg.click(button="right", clicks=2)
 
 
 
