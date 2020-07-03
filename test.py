@@ -20,23 +20,21 @@ board.test_click()
 
 
 # 15 moves
-for n in range(1):
+for n in range(2):
 
     # Read board and construct score distribution
     board.read_board(window)
     scores = board.get_scores()
+    board.reduce_board()
 
     print(scores)
+    print(board)
 
+    # Mark bombs
     for r in range(len(scores)):
         for c in range(len(scores[0])):
-            if scores[r][c] == 100:
+            if scores[r][c] == 100 and (r,c) not in board.bombs:
                 board.mark_bomb(r,c)
-
-    # Test reduce board
-    time.sleep(1)
-    board.read_board(window)
-    print(board.reduce_board())
 
     board.make_move()
 

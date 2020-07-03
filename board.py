@@ -175,12 +175,17 @@ class Board():
                     neighs, indices = self.get_neigh(r, c)
                     locs = zip(indices[0], indices[1])
 
-                    # For eacb labeled tile thats a neighbor, decrease label by 1
+                    # For each labeled tile thats a neighbor, decrease label by 1
                     for row, col in locs:
                         if effective[row][col] > 0 and effective[row][col] < 9:
-                            effective[row][col] -= 1
+
+                            # If tile is decreased from 1 to 0, make it -1 instead bc -1 means a clear tile.  Else subtract 1 regularly
+                            if effective[row][col] == 1:
+                                effective[row][col] = -1
+                            else:
+                                effective[row][col] -= 1
         
-        return effective
+        self.data = effective
 
 
 
