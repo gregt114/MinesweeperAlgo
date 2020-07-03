@@ -19,55 +19,26 @@ board.test_click()
 
 
 
-# 10 moves
-for n in range(15):
+# 15 moves
+for n in range(1):
 
-    # Read board and construct probability distribution
+    # Read board and construct score distribution
     board.read_board(window)
-    probas = board.get_probas()
+    scores = board.get_scores()
 
-    click_lows = True
-    mark_bombs = True
+    print(scores)
 
-    # Get low probabilities
-    try:
-        low = probas[(probas > 0) & (probas < 0.3)].min()
-        lows = np.where(probas == low)
-    except:
-        click_lows = False
+    for r in range(len(scores)):
+        for c in range(len(scores[0])):
+            if scores[r][c] == 100:
+                board.mark_bomb(r,c)
 
-    # Get high probabilities
-    try:
-        highs = np.where(probas >= 1.3)
-    except:
-        mark_bombs = False
+    # Test reduce board
+    time.sleep(1)
+    board.read_board(window)
+    print(board.reduce_board())
 
-
-    if click_lows:
-        # Click the lowest probability tile(s)
-        for row, col in zip(lows[0], lows[1]):
-            board.click_tile(row, col)
-
-    if mark_bombs:
-        # Mark bombs
-        for row, col in zip(highs[0], highs[1]):
-
-            # If it's already marked, don't mark it again
-            if (row, col) in board.bombs:
-                continue
-
-            board.mark_bomb(row, col)
-
-    # If now low or high probabilites, click randomly
-    if not (click_lows or mark_bombs):
-        row = np.random.randnint(0,16)
-        col = np.random.randnint(0,16)
-
-        if (row,col) in board.bombs:
-            continue
-        else:
-            board.click(row, col)
-
+    board.make_move()
 
 
 

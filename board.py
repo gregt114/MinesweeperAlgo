@@ -38,7 +38,7 @@ class Board():
         """
         Click the first hidden tile found(for dev purposes only)
         """
-        self.click_tile(8,8)
+        self.click_tile(0,0)
 
     
     def get_coords(self, row ,col):
@@ -80,7 +80,7 @@ class Board():
         1  : One neighbor is a bomb
         2  : Two neighbors are bombs
         3,4,5 etc...
-        99 : Bomb(flagged)
+        9  : Bomb(flagged)
         """
 
         # Get locations for each type of tile
@@ -97,7 +97,7 @@ class Board():
         board_data = []
         # Add labels to each type of tile (Box objects)
         # -1 is a clear tile, 0 is a hidden tile, 1 is one, etc...
-        for lst,name in zip([clears, hiddens, ones, twos, threes, fours, fives, bombs], [-1,0,1,2,3,4,5,99]):
+        for lst,name in zip([clears, hiddens, ones, twos, threes, fours, fives, bombs], [-1,0,1,2,3,4,5,9]):
             for tile in lst:
                 board_data.append([tuple(pg.center(tile)), name])
 
@@ -159,46 +159,70 @@ class Board():
         return self.data[index].reshape(dim), np.where(index==True)
 
     
-    def get_probas(self):
+    def reduce_board(self):
         """
-        Returns a 2D array of the calculated probabilities
-        that each tile is a bomb
+        Returns self.data but processed so that labels are replaced with
+        the effective label
         """
+        effective = self.data.copy()
 
-        probas = np.zeros_like(self.data, dtype=np.float)
+        # For each bomb tile
+        for r in range(self.data.shape[0]):
+            for c in range(self.data.shape[1]):
+                if self.data[r][c] == 9:
+                    
+                    # Get neighbors and their (r,c) locations
+                    neighs, indices = self.get_neigh(r, c)
+                    locs = zip(indices[0], indices[1])
+
+                    # For eacb labeled tile thats a neighbor, decrease label by 1
+                    for row, col in locs:
+                        if effective[row][col] > 0 and effective[row][col] < 9:
+                            effective[row][col] -= 1
         
-        # For each hidden tile, calulate probability
-        for r in range(len(self.data)):
-            for c in range(len(self.data[0])):
-
-                # Only calculate probabilities for 1s,2s,3s etc... and bombs
-                if self.data[r][c] != -1 or self.data[r][c] != 0:
-
-                    # Get neighbors and indices
-                    neighs, indices = self.get_neigh(r,c)
-
-                    num_zeros = (neighs==0).sum()   # How many neighbors are hidden
-                    if num_zeros == 0:              # If no hidden neighbors, skip
-                        continue
-
-                    # Non bomb tiles
-                    if self.data[r][c] != 99:
-                        num_bombs = self.data[r][c]         # The middle number is how many bombs are neighbors
-                        p = num_bombs / num_zeros           # Proabability = num bombs / num hidden tiles
-                    # bomb tiles
-                    else:
-                        probas[r][c] = 9                    # Set bomb probability to be high
-                        p = -1                              # If a bomb is found, then the probability its neighbors are bombs is decreased by 1
+        return effective
 
 
-                    # Add "p" to all hidden neighbors
-                    for row, col in zip(indices[0], indices[1]):
-                        if self.data[row][col] == 0:       # If tile is hidden
-                            probas[row][col] += p          # Add proabability
-        
-        return probas
+
+    def get_scores(self):
+        scores = np.zeros_like(self.data, dtype=np.float)
+
+        # For each...
+        for r in range(self.data.shape[0]):
+            for c in range(self.data.shape[1]):
+
+                # Labeled tiles
+                if self.data[r][c] > 0:
+                    # Get neighbors and their (r,c) locations
+                    neighs, indices = self.get_neigh(r, c)
+                    locs = zip(indices[0], indices[1])
 
 
+                    # Deterministic rules for mines
+                    
+                    center = self.data[r][c]            # Tile in consideration
+                    hidden = (neighs==0).sum()      # Num hidden neighbors
+                    clear = (neighs==-1).sum()      # Num clear neighbors
+                    flagged = (neighs==9).sum()     # Num flagged neighbors
+
+
+                    # Rule 1: If center num - num flagged = num hidden, each hidden is a bomb
+                    if center - flagged == hidden:
+                        for row, col in locs:
+                            if self.data[row][col] == 0:
+                                scores[row][col] = 100
+
+
+                # Bomb tiles
+                if self.data[r][c] == 9:
+                    pass
+
+
+        return scores
+
+
+    def make_move(self):
+        pass
 
 
 
