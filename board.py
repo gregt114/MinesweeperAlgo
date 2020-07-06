@@ -38,7 +38,7 @@ class Board():
         """
         Click the first hidden tile found(for dev purposes only)
         """
-        self.click_tile(0,0)
+        self.click_tile(8,8)
 
     
     def get_coords(self, row ,col):
@@ -113,6 +113,7 @@ class Board():
         final = final.reshape(self.nrows, self.ncols)
 
         self.data = final
+        self.raw_data = final.copy()
 
     
     def get_neigh(self, row, col):
@@ -179,9 +180,9 @@ class Board():
                     for row, col in locs:
                         if effective[row][col] > 0 and effective[row][col] < 9:
 
-                            # If tile is decreased from 1 to 0, make it -1 instead bc -1 means a clear tile.  Else subtract 1 regularly
+                            # If tile is decreased from 1 to 0, make it -2 instead bc -2 means a safe hidden tile.  Else subtract 1 regularly
                             if effective[row][col] == 1:
-                                effective[row][col] = -1
+                                effective[row][col] = -2
                             else:
                                 effective[row][col] -= 1
         
@@ -189,45 +190,63 @@ class Board():
 
 
 
-    def get_scores(self):
-        scores = np.zeros_like(self.data, dtype=np.float)
-
-        # For each...
+    def find_bombs(self):
+        
+        # For each labeled tile
         for r in range(self.data.shape[0]):
             for c in range(self.data.shape[1]):
-
-                # Labeled tiles
                 if self.data[r][c] > 0:
+
                     # Get neighbors and their (r,c) locations
                     neighs, indices = self.get_neigh(r, c)
                     locs = zip(indices[0], indices[1])
 
 
-                    # Deterministic rules for mines
-                    
-                    center = self.data[r][c]            # Tile in consideration
+                    # Deterministic rule for mines
+                    center = self.data[r][c]        # Tile in consideration
                     hidden = (neighs==0).sum()      # Num hidden neighbors
-                    clear = (neighs==-1).sum()      # Num clear neighbors
                     flagged = (neighs==9).sum()     # Num flagged neighbors
 
-
-                    # Rule 1: If center num - num flagged = num hidden, each hidden is a bomb
+                    # If center num - num flagged = num hidden, each hidden is a bomb
                     if center - flagged == hidden:
                         for row, col in locs:
                             if self.data[row][col] == 0:
-                                scores[row][col] = 100
+                                self.data[row][col] = 9
 
 
-                # Bomb tiles
-                if self.data[r][c] == 9:
-                    pass
 
 
-        return scores
+    def take_turn(self):
+
+        # Label Bombs as 9
+        self.find_bombs()
+
+        # Mark bombs first
+        for row in range(len(self.data)):
+            for col in range(len(self.data[0])):
+                if self.data[row][col] == 9 and (row, col) not in self.bombs:
+                    self.mark_bomb(row, col)
 
 
-    def make_move(self):
-        pass
+        # Reduce board (marks tiles with all safe neighbors as -2)
+        self.reduce_board()
+
+        # Click safe hidden tiles
+        for row in range(len(self.data)):
+            for col in range(len(self.data[0])):
+                if self.data[row][col] == -2:
+
+                    # Get neighbors and their indices
+                    neighs, indices = self.get_neigh(row, col)
+
+                    # Click on safe hidden tiles
+                    for r,c in zip(indices[0], indices[1]):
+                        if self.data[r][c] == 0:
+                            self.click_tile(r, c)
+
+
+
+        
 
 
 
